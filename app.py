@@ -1,35 +1,31 @@
 import streamlit as st
 import joblib
 import re
-import numpy as np
 
 # ==============================
 # Page Config
 # ==============================
 st.set_page_config(
-    page_title="News Category Detection",
+    page_title="Fake News Detection",
     page_icon="📰",
     layout="centered"
 )
 
 # ==============================
-# Load Model, Vectorizer & Category Mapping
+# Load Model & Vectorizer
 # ==============================
 @st.cache_resource
 def load_artifacts():
-    model = joblib.load("fake_news_model.pkl")      # your multi-category Logistic Regression model
-    vectorizer = joblib.load("tfidf_vectorizer.pkl")  # TF-IDF vectorizer
-    num_to_category = joblib.load("num_to_category.pkl")  # mapping numbers to category names
-    return model, vectorizer, num_to_category
+    model = joblib.load("fake_news_model.pkl")
+    vectorizer = joblib.load("tfidf_vectorizer.pkl")
+    return model, vectorizer
 
-model, vectorizer, num_to_category = load_artifacts()
+model, vectorizer = load_artifacts()
 
 # ==============================
-# Text Cleaning Function
+# Clean Text
 # ==============================
 def clean_text(text):
-    if not text:
-        return ""
     text = text.lower()
     text = re.sub(r"http\S+", "", text)
     text = re.sub(r"[^a-z\s]", "", text)
@@ -39,11 +35,13 @@ def clean_text(text):
 # ==============================
 # UI
 # ==============================
-st.title("📰 News Category Detection System")
+st.title("📰 Fake News Detection System")
+st.caption("⚠️ Predictions are based on language patterns, not factual verification.")
+
 st.markdown(
     """
-    Enter a news article below and check its **Category**.  
-    This system uses **Logistic Regression** with **TF-IDF features**.
+    Enter a news article below and check whether it is **Fake** or **Real**.  
+    Model used: **Logistic Regression + TF-IDF**
     """
 )
 
@@ -56,35 +54,31 @@ news_input = st.text_area(
 # ==============================
 # Prediction
 # ==============================
-if st.button("🔍 Predict Category"):
+if st.button("🔍 Predict"):
     if not news_input.strip():
         st.warning("⚠️ Please enter some news text!")
     else:
         cleaned_text = clean_text(news_input)
         vectorized_text = vectorizer.transform([cleaned_text])
 
-        # Prediction
-        pred_num = model.predict(vectorized_text)[0]
-        pred_category = num_to_category[pred_num]
+        probability = model.predict_proba(vectorized_text)[0]
 
-        # Probability / confidence scores
-        prob_scores = model.predict_proba(vectorized_text)[0]
-        # Map probabilities to categories
-        prob_dict = {num_to_category[i]: prob_scores[i]*100 for i in range(len(prob_scores))}
-        # Sort by highest probability
-        sorted_probs = dict(sorted(prob_dict.items(), key=lambda x: x[1], reverse=True))
+        st.subheader("📌 Prediction Result")
 
-        # Result
-        st.subheader("📌 Predicted Category")
-        st.success(f"**{pred_category}**")
+        # Threshold-based decision
+        if probability[0] > 0.6:
+            st.error("Fake News 🔴")
+        elif probability[1] > 0.6:
+            st.success("Real News 🟢")
+        else:
+            st.warning("⚠️ Uncertain Prediction")
 
-        # Confidence Scores
-        st.subheader("📊 Confidence Scores")
-        for cat, score in sorted_probs.items():
-            st.info(f"{cat}: **{score:.2f}%**")
+        st.subheader("📊 Confidence Score")
+        st.info(f"Fake News 🔴: **{probability[0]*100:.2f}%**")
+        st.info(f"Real News 🟢: **{probability[1]*100:.2f}%**")
 
 # ==============================
 # Footer
 # ==============================
 st.markdown("---")
-st.caption("News Category Detection Project | Logistic Regression + TF-IDF")
+st.caption("Fake News Detection Project | Logistic Regression + TF-IDF")
