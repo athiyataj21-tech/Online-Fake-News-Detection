@@ -170,7 +170,7 @@ python fake_news_file.py
 BE (ECE) graduate with a strong interest in Data Science, Machine Learning, and Python Development. Passionate about solving real-world problems through data-driven solutions and continuously expanding technical skills through hands-on projects.
 
 - 📍 Bengaluru, India
-- 📧 athiyataj469@gmail.com
+- 📧 athiyataj9@gmail.com
 - 💼 LinkedIn: https://www.linkedin.com/in/athiya-taj-a17416394
 - 🐙 GitHub: https://github.com/athiyataj21-tech
 
